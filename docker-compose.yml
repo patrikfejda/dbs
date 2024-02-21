@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    environment:
+      NAME: Dexter
+      DATABASE_HOST: dbs-db
+      DATABASE_NAME: demo
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_PORT: 5432
+    volumes:
+      - ./app/:/home/dbs/app/
+    ports:
+      - "8000:8000"
+    depends_on:
+      dbs-db:
+        condition: service_healthy
+
+  dbs-db:
+    image: postgres:15.1-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=test
+      - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - dbs-db-data:/var/lib/postgresql/data
+      # - ./sql_dumps/flights.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 5432:5432
+      
+volumes:
+  dbs-db-data:
